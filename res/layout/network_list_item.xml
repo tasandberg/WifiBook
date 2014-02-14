@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp"
+                android:layout_marginLeft="26dp"
+                android:layout_marginRight="26dp"
+                android:layout_gravity="center_vertical">
+
+    <ImageView
+            android:id="@+id/status_icon"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:layout_marginRight="8dp"
+            android:src="@drawable/btn_radio_on_holo"/>
+
+
+    <TextView
+            android:layout_toLeftOf="@id/status_icon"
+        android:id="@+id/status_text"
+        android:layout_height="wrap_content"
+        android:layout_width="75dp"
+        android:gravity="center"
+        android:layout_marginTop="3dp"
+        android:textSize="15dp" />
+
+
+    <TextView android:id="@+id/network_name_view"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_alignParentLeft="true"
+              android:layout_marginLeft="16dp"
+              android:fontFamily="Roboto Light"
+              android:textSize="18sp"
+              android:gravity="center_vertical"
+              android:text="Network Title" />
+
+</RelativeLayout>

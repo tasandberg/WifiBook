@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+        android:background="#ffffff">
+
+    <item android:id="@+id/add_networks"
+          android:icon="@drawable/ic_menu_add"
+          android:title="@string/manage_networks"
+          android:showAsAction="ifRoom|withText"/>
+
+</menu>
