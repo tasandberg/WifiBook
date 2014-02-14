@@ -1,5 +1,9 @@
 package com.tim.wifibook;
 
+/*
+Testing Git Commit
+ */
+
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -30,7 +34,7 @@ public class WifiService extends Service {
 
     @Override
     public void onCreate(){
-        Log.d(TAG,"onCreate() called in Service");
+        Log.d(TAG, "onCreate() called in Service");
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
