@@ -4,18 +4,19 @@ package com.tim.wifibook;
 Testing Git Commit
  */
 
-import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -28,16 +29,17 @@ import java.util.List;
 
 public class WifiService extends Service {
     final static int notificationID = 7278;
+    public static boolean isRunning;
     private static final String TAG = "WifiService";
     private WifiManager mWifiManager;
     private List<ScanResult> result_list;
     private ArrayList<Network> mNetworks;
     private int count = 1;
-    private static final int CHECK_INTERVAL = 1000 * 120; //2 minutes
+    private Handler handler;
+    private static final int CHECK_INTERVAL = 1000 * 10; //2 minutes
 
     @Override
     public void onCreate(){
-
         Log.d(TAG, "onCreate() called in Service");
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         readWepConfig();
@@ -46,10 +48,7 @@ public class WifiService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putBoolean("running", false);
-        editor.commit();
+        isRunning = true;
         startNotification(getApplicationContext());
         mNetworks = NetworkManager.get(getApplicationContext())
                 .getNetworks();
@@ -58,30 +57,27 @@ public class WifiService extends Service {
             mWifiManager.setWifiEnabled(true);
         }
 
-        final Handler handler = new Handler();
-        Runnable scanNetworks = new Runnable(){
-            @Override
-            public void run() {
-                registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-                mWifiManager.startScan();
-                handler.postDelayed(this,CHECK_INTERVAL);
-            }
-        };
+        handler = new Handler();
         handler.post(scanNetworks);
 
         return Service.START_STICKY;
     }
 
-
+    private Runnable scanNetworks = new Runnable(){
+        @Override
+        public void run() {
+            registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            mWifiManager.startScan();
+            handler.postDelayed(this,CHECK_INTERVAL);
+        }
+    };
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         stopForeground(true);
-        SharedPreferences sp = getSharedPreferences("prefs", Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putBoolean("running", false);
-        editor.commit();
+        handler.removeCallbacks(scanNetworks);
+        isRunning = false;
         Log.d(TAG,"onDestroy: unregistering receiver..");
         unregisterReceiver(mBroadcastReceiver);
     }
@@ -100,6 +96,7 @@ public class WifiService extends Service {
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Received broadcast " + count);
             result_list = mWifiManager.getScanResults();
+            readWepConfig();
             count++;
             boolean networksInRange = knownNetworksInRange(result_list, mNetworks);
             if(networksInRange){

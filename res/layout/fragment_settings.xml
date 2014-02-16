@@ -32,4 +32,16 @@
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:id="@+id/mode_blurb"/>
 
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+        <ListView
+            android:layout_height="200dp"
+            android:layout_width="match_parent"
+            android:id="@android:id/list"/>
+
+    </LinearLayout>
+
 </LinearLayout>

@@ -1,10 +1,12 @@
 package com.tim.wifibook;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -16,7 +18,9 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        getActivity().getActionBar().setTitle("Settings");
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+            getActivity().getActionBar().setTitle("Settings");
+        }
 
     }
 
@@ -52,6 +56,7 @@ public class SettingsFragment extends Fragment {
                 }
             }
         });
+        ListView lv = (ListView) v.findViewById(android.R.id.list);
 
         return v;
     }

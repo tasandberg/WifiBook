@@ -2,12 +2,10 @@ package com.tim.wifibook;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,7 +73,7 @@ public class WelcomeFragment extends Fragment {
                     status_view.setText("Status: No connection");
                 }
                 String appender = "\n";
-                if(serviceRunning()) appender += "Wifi Management OFF";
+                if(!serviceRunning()) appender += "Wifi Management OFF";
                 else appender += "Wifi Management ON";
                 status_view.append(appender);
                 handler.postDelayed(this,2000);
@@ -130,9 +128,7 @@ public class WelcomeFragment extends Fragment {
     }
 
     private boolean serviceRunning() {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean isRunning = sp.getBoolean("running", false);
-        return isRunning;
+       return WifiService.isRunning;
     }
 
 
