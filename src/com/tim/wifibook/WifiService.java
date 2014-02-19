@@ -1,9 +1,5 @@
 package com.tim.wifibook;
 
-/*
-Testing Git Commit
- */
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,26 +33,22 @@ public class WifiService extends Service {
     private ArrayList<Network> mNetworks;
     private int count = 1;
     private Handler handler;
-    private static final int CHECK_INTERVAL = 1000 * 10; //2 minutes
+    private static final int CHECK_INTERVAL = 1000 * 10; //1 min
 
     @Override
     public void onCreate(){
         Log.d(TAG, "onCreate() called in Service");
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        readWepConfig();
+
         //registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         isRunning = true;
+
         startNotification(getApplicationContext());
-        mNetworks = NetworkManager.get(getApplicationContext())
-                .getNetworks();
-        if(!mWifiManager.isWifiEnabled()){
-            Log.d(TAG,"Enabling Wifi for scan");
-            mWifiManager.setWifiEnabled(true);
-        }
+
 
         handler = new Handler();
         handler.post(scanNetworks);
@@ -66,8 +59,15 @@ public class WifiService extends Service {
     private Runnable scanNetworks = new Runnable(){
         @Override
         public void run() {
+            if(!mWifiManager.isWifiEnabled()){
+                Log.d(TAG,"Enabling Wifi for scan");
+                mWifiManager.setWifiEnabled(true);
+            }
+            readWepConfig();
             registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
             mWifiManager.startScan();
+            mNetworks = NetworkManager.get(getApplicationContext())
+                    .getNetworks();
             handler.postDelayed(this,CHECK_INTERVAL);
         }
     };
@@ -78,8 +78,12 @@ public class WifiService extends Service {
         stopForeground(true);
         handler.removeCallbacks(scanNetworks);
         isRunning = false;
-        Log.d(TAG,"onDestroy: unregistering receiver..");
-        unregisterReceiver(mBroadcastReceiver);
+        try {
+            unregisterReceiver(mBroadcastReceiver);
+        } catch (Exception e) {
+            Log.d(TAG, "Receiver already unregistered");
+        }
+
     }
 
 
@@ -96,7 +100,6 @@ public class WifiService extends Service {
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Received broadcast " + count);
             result_list = mWifiManager.getScanResults();
-            readWepConfig();
             count++;
             boolean networksInRange = knownNetworksInRange(result_list, mNetworks);
             if(networksInRange){
@@ -104,8 +107,8 @@ public class WifiService extends Service {
             } else if(!networksInRange) {
                 mWifiManager.setWifiEnabled(false);
             }
+            unregisterReceiver(mBroadcastReceiver);
 
-            unregisterReceiver(this);
 
         }
 
@@ -122,8 +125,8 @@ public class WifiService extends Service {
     //GATHER LIST OF ALL CONFIGURED NETWORKS
     void readWepConfig() {
         List<WifiConfiguration> items = mWifiManager.getConfiguredNetworks();
-        NetworkManager.get(getApplicationContext()).getNetworks().clear();
         try{
+            NetworkManager.get(getApplicationContext()).getNetworks().clear();
             for(int i = 0;i<items.size();i++){
                 WifiConfiguration config = items.get(i);
                 Network n = new Network(config.SSID.replace("\"",""));
@@ -131,11 +134,13 @@ public class WifiService extends Service {
             }
             Log.d(TAG,"Networks refreshed");
             ArrayList<Network> netList = NetworkManager.get(getApplicationContext()).getNetworks();
+
             for(int i = 0;i<netList.size();i++){
                 Log.d(TAG, "Network " + i + ": " + netList.get(i).getName());
             }
         } catch(Exception e){
-            Log.e(TAG,"Exception " + e);
+            Toast.makeText(getApplicationContext(),"Error gathering configured networks", Toast.LENGTH_SHORT).show();
+            Log.e(TAG,"Networks did not refresh (" + e + ")");
         }
     }
 
