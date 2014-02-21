@@ -10,14 +10,11 @@ import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,7 +27,7 @@ public class WifiService extends Service {
     private static final String TAG = "WifiService";
     private WifiManager mWifiManager;
     private List<ScanResult> result_list;
-    private ArrayList<Network> mNetworks;
+    private List<WifiConfiguration> mNetworks;
     private int count = 1;
     private Handler handler;
     private static final int CHECK_INTERVAL = 1000 * 10; //1 min
@@ -39,20 +36,15 @@ public class WifiService extends Service {
     public void onCreate(){
         Log.d(TAG, "onCreate() called in Service");
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
-        //registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        mNetworks = mWifiManager.getConfiguredNetworks();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         isRunning = true;
-
         startNotification(getApplicationContext());
-
-
         handler = new Handler();
         handler.post(scanNetworks);
-
         return Service.START_STICKY;
     }
 
@@ -63,11 +55,8 @@ public class WifiService extends Service {
                 Log.d(TAG,"Enabling Wifi for scan");
                 mWifiManager.setWifiEnabled(true);
             }
-            readWepConfig();
             registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
             mWifiManager.startScan();
-            mNetworks = NetworkManager.get(getApplicationContext())
-                    .getNetworks();
             handler.postDelayed(this,CHECK_INTERVAL);
         }
     };
@@ -101,13 +90,13 @@ public class WifiService extends Service {
             Log.d(TAG, "Received broadcast " + count);
             result_list = mWifiManager.getScanResults();
             count++;
+            mNetworks = mWifiManager.getConfiguredNetworks();
             boolean networksInRange = knownNetworksInRange(result_list, mNetworks);
             if(networksInRange){
                 return;
             } else if(!networksInRange) {
                 mWifiManager.setWifiEnabled(false);
             }
-            unregisterReceiver(mBroadcastReceiver);
 
 
         }
@@ -121,44 +110,47 @@ public class WifiService extends Service {
         return pi != null;
     }
 
-
+    /*
     //GATHER LIST OF ALL CONFIGURED NETWORKS
-    void readWepConfig() {
+    List<WifiConfiguration> readWepConfig() {
         List<WifiConfiguration> items = mWifiManager.getConfiguredNetworks();
-        try{
-            NetworkManager.get(getApplicationContext()).getNetworks().clear();
-            for(int i = 0;i<items.size();i++){
-                WifiConfiguration config = items.get(i);
-                Network n = new Network(config.SSID.replace("\"",""));
-                NetworkManager.get(getApplicationContext()).getNetworks().add(n);
-            }
-            Log.d(TAG,"Networks refreshed");
-            ArrayList<Network> netList = NetworkManager.get(getApplicationContext()).getNetworks();
-
-            for(int i = 0;i<netList.size();i++){
-                Log.d(TAG, "Network " + i + ": " + netList.get(i).getName());
-            }
-        } catch(Exception e){
-            Toast.makeText(getApplicationContext(),"Error gathering configured networks", Toast.LENGTH_SHORT).show();
-            Log.e(TAG,"Networks did not refresh (" + e + ")");
+        Log.d(TAG,"Networks refreshed: ");
+        if(items.isEmpty()) {
+            Log.d(TAG,"List Empty");
+            return items;
         }
+
+        for(int i = 0;i<items.size();i++){
+            Log.d(TAG, "Network " + i + ": " + items.get(i).SSID);
+        }
+
+        return items;
+
     }
 
 
-    public boolean knownNetworksInRange(List<ScanResult> results, ArrayList<Network> myNetworks){
-        boolean preferredNetworkFound = false;
-        ArrayList<Network> preferredNetworks = new ArrayList<Network>();
-        for(Network n: myNetworks){
-            if(n.isActive()) {
-                preferredNetworks.add(n);
-            }
+        catch(Exception e){
+
+            Toast.makeText(getApplicationContext(), "Error gathering configured networks", Toast.LENGTH_SHORT).show();
+            Log.e(TAG,"Networks did not refresh (" + e + ")");
         }
+        */
+
+
+
+    public boolean knownNetworksInRange(List<ScanResult> results, List<WifiConfiguration> myNetworks){
+        boolean preferredNetworkFound = false;
+        Log.d(TAG,"Saved networks:");
+        for (int i = 0; i < myNetworks.size()-1; i++) {
+            Log.d(TAG,myNetworks.get(i).SSID);
+        }
+
         for(ScanResult r : results){
             String SSID = r.SSID;
             Log.d(TAG, "Checking for found network: " + r.SSID);
-            for(int i = 0; i < preferredNetworks.size(); i++){
-                if(SSID.equals(preferredNetworks.get(i).getName())){
-                    Log.d(TAG,"Configured network found (" + preferredNetworks.get(i) + ")");
+            for(int i = 0; i < myNetworks.size(); i++){
+                if(SSID.equals(myNetworks.get(i).SSID.replace("\"", ""))){
+                    Log.d(TAG,"Configured network found (" +myNetworks.get(i).SSID.replace("\"","") + ")");
                     preferredNetworkFound = true;
                     return preferredNetworkFound;
                 }
@@ -170,11 +162,20 @@ public class WifiService extends Service {
 
     // DEFINE AND START NOTIFICATION
     public void startNotification(Context context) {
-        Notification notification;
+
         PendingIntent pendIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
+        String status = isRunning ? "On" : "Off";
+        Notification notification = new NotificationCompat.Builder(this)
+                .setTicker("WifiBook is managing your wifi connection")
+                .setSmallIcon(R.drawable.elephi_clear)
+                .setContentTitle("WifiBook")
+                .setContentText("Wifi Management On")
+                .setContentIntent(pendIntent)
+                .setAutoCancel(false)
+                .build();
 
-
+        /*
         if((Build.VERSION.SDK_INT) >= Build.VERSION_CODES.DONUT) {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
@@ -189,8 +190,7 @@ public class WifiService extends Service {
                     System.currentTimeMillis());
             notification.setLatestEventInfo(context, "Wifibook?!","WifiBook on", pendIntent);
         }
-
-        notification.flags |= Notification.FLAG_NO_CLEAR;
+        */
         startForeground(notificationID, notification);
 
     }

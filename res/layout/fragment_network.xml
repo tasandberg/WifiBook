@@ -6,48 +6,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp">
-    <TextView
-            android:text="Network Management"
-            android:textSize="21sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"/>
-    <View android:id="@+id/separator"
-          android:background="#ffffff"
-          android:layout_width = "match_parent"
-          android:layout_height="1dip"
-          android:layout_centerVertical ="true"
-          android:layout_alignParentTop="true"/>
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
-        <TextView
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="Enable network as wifi switch"
-                android:typeface="sans"
-                android:textSize="18sp"
-                android:textAlignment="center"
-                />
-        <ToggleButton
-                android:layout_weight="1"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/toggleButton" />
-    </LinearLayout>
-    <View android:id="@+id/separator"
-          android:background="#ffffff"
-          android:layout_width = "match_parent"
-          android:layout_height="1dip"
-          android:layout_centerVertical ="true"
-          android:layout_alignParentTop="true"/>
 
     <LinearLayout
             android:orientation="horizontal"
@@ -61,7 +20,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="Delete"
+                android:text="Forget"
                 android:typeface="sans"
                 android:textSize="18sp"
                 android:textAlignment="center"

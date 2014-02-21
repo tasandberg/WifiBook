@@ -1,23 +1,27 @@
 package com.tim.wifibook;
 
 import android.content.Context;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Tim Sandberg on 1/16/14.
  */
 public class NetworkManager {
     private static final String TAG = "NetworkManager";
-    public ArrayList<Network> mNetworks;
+    public List<WifiConfiguration> mNetworks;
     private static NetworkManager sNetworkManager;
     private Context mAppContext;
     private boolean isServiceOn;
+    private WifiManager mWifiManager;
 
     private NetworkManager(Context appContext){
+        mWifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
         mAppContext = appContext;
-        mNetworks = new ArrayList<Network>();
+        mNetworks = mWifiManager.getConfiguredNetworks();
         isServiceOn = false;
     }
 
@@ -28,15 +32,16 @@ public class NetworkManager {
         return sNetworkManager;
     }
 
-    public ArrayList<Network> getNetworks() {
+    public List<WifiConfiguration> getNetworks() {
         return mNetworks;
     }
 
-    public Network getNetwork(String name){
-        for(Network n: mNetworks){
-            if(n.getName().equals(name))
-                return n;
+    public WifiConfiguration getNetwork(String SSID){
+        for(WifiConfiguration wc: mNetworks){
+            if(wc.SSID.equals(SSID))
+                return wc;
         }
+
         Log.d(TAG,"Network not found");
         return null;
     }

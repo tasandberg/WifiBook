@@ -2,6 +2,7 @@ package com.tim.wifibook;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Tim Sandberg on 1/18/14.
@@ -25,9 +26,10 @@ import java.util.ArrayList;
 public class WelcomeFragment extends Fragment {
     private static final String TAG = "WelcomeFragment";
     public ImageView iconView;
-    public ArrayList<Network> mPrefNetworks;
+    public List<WifiConfiguration> mPrefNetworks;
     Handler handler;
     WifiManager mWifiManager;
+    boolean isRunning;
 
     static WelcomeFragment init(int val){
         WelcomeFragment wf = new WelcomeFragment();
@@ -39,7 +41,7 @@ public class WelcomeFragment extends Fragment {
 
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-
+        isRunning = WifiService.isRunning;
         mPrefNetworks = NetworkManager.get(getActivity()).getNetworks();
         mWifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
 
@@ -62,31 +64,34 @@ public class WelcomeFragment extends Fragment {
             }
         });
 
+
+
+
+
+        //****** Toggle Button  *********//
+        final ToggleButton on_off = (ToggleButton) v.findViewById(R.id.onOff);
         //*** Update UI with connection status ***//
         final Runnable updateStatus = new Runnable(){
             @Override
             public void run() {
                 String current_network = checkConnectionStatus(mPrefNetworks);
+                isRunning = WifiService.isRunning;
+                if(isRunning) on_off.setChecked(true);
                 if(!current_network.equals("0x") && !(current_network).equals("<unknown ssid>")) {
                     status_view.setText("Status: Connected to " + current_network);
                 }  else {
                     status_view.setText("Status: No connection");
                 }
                 String appender = "\n";
-                if(!serviceRunning()) appender += "Wifi Management OFF";
+                if(!isRunning) appender += "Wifi Management OFF";
                 else appender += "Wifi Management ON";
                 status_view.append(appender);
                 handler.postDelayed(this,2000);
-                }
-            };
+            }
+        };
         handler = new Handler();
         handler.post(updateStatus);
-
-
-
-        //****** Toggle Button  *********//
-        final ToggleButton on_off = (ToggleButton) v.findViewById(R.id.onOff);
-        if(!serviceRunning()){
+        if(!isRunning){
             on_off.setChecked(false);
         } else on_off.setChecked(true);
             on_off.setOnClickListener(new View.OnClickListener() {
@@ -115,7 +120,7 @@ public class WelcomeFragment extends Fragment {
         return v;
     }
 
-    public String checkConnectionStatus(ArrayList<Network> mPrefNetworks){
+    public String checkConnectionStatus(List<WifiConfiguration> mPrefNetworks){
         WifiInfo wInfo = mWifiManager.getConnectionInfo();
         String s = wInfo.getSSID();
         return s;
@@ -124,12 +129,10 @@ public class WelcomeFragment extends Fragment {
     @Override
     public void onResume(){
         Log.d(TAG, "On resume");
+        isRunning = WifiService.isRunning;
         super.onResume();
     }
 
-    private boolean serviceRunning() {
-       return WifiService.isRunning;
-    }
 
 
 

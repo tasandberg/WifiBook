@@ -38,7 +38,6 @@
     <TextView android:layout_width="match_parent"
               android:layout_height="75dp"
               android:id="@+id/mode_blurb"/>
-
     <TextView android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:text="@string/networks_header"
@@ -50,25 +49,96 @@
           android:layout_centerVertical ="true"
           android:layout_alignParentTop="true"/>
 
-    <LinearLayout android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="horizontal">
-        <Button android:layout_weight="1"
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        <Button
+                      android:layout_width="match_parent"
+                      android:layout_height="45dp"
+                      android:id="@+id/manage_btn"
+                      android:text="@string/manage_btn"
+                      android:drawableLeft="@drawable/ic_menu_manage"/>
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:id="@+id/mynetworksCntr"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Saved networks"/>
+
+        <View android:id="@+id/separator"
+              android:background="#33B5E5"
+              android:layout_width = "match_parent"
+              android:layout_height="1dip"
+              android:layout_centerVertical ="true"
+              android:layout_alignParentTop="true"/>
+        <ListView
+                android:id="@+id/myNetworksList"
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+
+
+        <Button
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
-                android:id="@+id/new_network"
+                android:id="@+id/newNetwork_button"
                 android:text="@string/add_btn"
                 android:drawableLeft="@drawable/ic_menu_add"/>
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:id="@+id/localNetworksCntr"
+                android:orientation="vertical"
+                android:visibility="gone">
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Networks in range"/>
 
-        <Button android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:id="@+id/manage_btn"
-                android:text="@string/manage_btn"
-                android:drawableRight="@drawable/ic_menu_manage"/>
+            <View android:id="@+id/separator"
+                  android:background="#33B5E5"
+                  android:layout_width = "match_parent"
+                  android:layout_height="1dip"
+                  android:layout_centerVertical ="true"
+                  android:layout_alignParentTop="true"/>
+            <ProgressBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/progressBar1"
+                    style="?android:attr/progressBarStyleLarge"
+                    android:visibility="gone"
+                    android:layout_gravity="center_horizontal"/>
+
+            <ListView
+                    android:id="@+id/newNetworksList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:layout_gravity="center_horizontal"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-
+    <!--
+    <TextView android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/notifications_header"
+              android:paddingTop="5dp"
+              android:textSize="20sp"/>
+    <View android:id="@+id/separator"
+          android:background="#33B5E5"
+          android:layout_width = "match_parent"
+          android:layout_height="1dip"
+          android:layout_centerVertical ="true"
+          android:layout_alignParentTop="true"/>
+    -->
 
 </LinearLayout>

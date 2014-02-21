@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:paddingTop="15dp"
-                android:paddingBottom="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
                 android:layout_marginLeft="26dp"
                 android:layout_marginRight="26dp"
                 android:layout_gravity="center_vertical">
@@ -15,7 +15,7 @@
             android:layout_height="30dp"
             android:gravity="center"
             android:layout_marginRight="8dp"
-            android:src="@drawable/btn_radio_on_holo"/>
+            android:src="@drawable/ic_menu_delete"/>
 
 
     <TextView

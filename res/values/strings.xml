@@ -12,6 +12,8 @@
         decreased battery life, and less reliable data connectivity.
     </string>
     <string name="networks_header">Networks</string>
+    <string name="notifications_header">Notifications</string>
     <string name="add_btn">New</string>
     <string name="manage_btn">Manage</string>
+    <string name="NetworkOptionsTitle">Forget Network?</string>
 </resources>
