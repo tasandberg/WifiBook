@@ -25,6 +25,7 @@ import java.util.List;
 
 public class WelcomeFragment extends Fragment {
     private static final String TAG = "WelcomeFragment";
+    private String current_network;
     public ImageView iconView;
     public List<WifiConfiguration> mPrefNetworks;
     Handler handler;
@@ -42,6 +43,7 @@ public class WelcomeFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         isRunning = WifiService.isRunning;
+        setRetainInstance(true);
         mPrefNetworks = NetworkManager.get(getActivity()).getNetworks();
         mWifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
 
@@ -74,9 +76,11 @@ public class WelcomeFragment extends Fragment {
         final Runnable updateStatus = new Runnable(){
             @Override
             public void run() {
-                String current_network = checkConnectionStatus(mPrefNetworks);
+                current_network = checkConnectionStatus(mPrefNetworks);
                 isRunning = WifiService.isRunning;
-                if(isRunning) on_off.setChecked(true);
+                if(!isRunning){
+                    on_off.setChecked(false);
+                } else on_off.setChecked(true);
                 if(!current_network.equals("0x") && !(current_network).equals("<unknown ssid>")) {
                     status_view.setText("Status: Connected to " + current_network);
                 }  else {
@@ -91,30 +95,28 @@ public class WelcomeFragment extends Fragment {
         };
         handler = new Handler();
         handler.post(updateStatus);
-        if(!isRunning){
-            on_off.setChecked(false);
-        } else on_off.setChecked(true);
-            on_off.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), WifiService.class);
 
-                    if(!on_off.isChecked()){
-                        //STOP SERVICE
-                        getActivity().stopService(intent);
-                        Log.d(TAG,"Service stopped");
+        on_off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), WifiService.class);
 
-                    }
-                    else{
-                        //START SERVICE
-                        getActivity().startService(intent);
+                if(!on_off.isChecked()){
+                    //STOP SERVICE
+                    getActivity().stopService(intent);
+                    Log.d(TAG,"Service stopped");
 
-                        Log.d(TAG,"Service started");
-
-                    }
-                    handler.post(updateStatus);
                 }
-            });
+                else{
+                    //START SERVICE
+                    getActivity().startService(intent);
+
+                    Log.d(TAG,"Service started");
+
+                }
+                handler.post(updateStatus);
+            }
+        });
 
 
         return v;
@@ -128,8 +130,9 @@ public class WelcomeFragment extends Fragment {
 
     @Override
     public void onResume(){
-        Log.d(TAG, "On resume");
+        Log.d(TAG, "On resume (" + String.valueOf(isRunning) +")");
         isRunning = WifiService.isRunning;
+
         super.onResume();
     }
 

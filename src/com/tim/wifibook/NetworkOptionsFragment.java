@@ -26,7 +26,7 @@ public class NetworkOptionsFragment extends android.support.v4.app.DialogFragmen
 
     public static NetworkOptionsFragment newInstance(String SSID) {
         Bundle args = new Bundle();
-        args.putString(EXTRA_NETWORK, SSID);
+        args.putSerializable(EXTRA_NETWORK, SSID);
 
         NetworkOptionsFragment fragment = new NetworkOptionsFragment();
         fragment.setArguments(args);
@@ -36,11 +36,12 @@ public class NetworkOptionsFragment extends android.support.v4.app.DialogFragmen
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         View v = getActivity().getLayoutInflater()
-                .inflate(R.layout.fragment_network,null);
+                .inflate(R.layout.fragment_newnet,null);
         final String network = (String) getArguments().getString(EXTRA_NETWORK);
         Log.d(TAG,"Network Dialog for: " + network);
         final WifiManager wifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
         ImageButton delete_btn = (ImageButton) v.findViewById(R.id.deleteButton);
+        delete_btn.setBackgroundColor(getResources().getColor(android.R.color.transparent));
         delete_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

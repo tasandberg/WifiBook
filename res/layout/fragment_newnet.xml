@@ -9,7 +9,7 @@
         android:padding="15dp">
 
 
-    <LinearLayout
+    <ScrollView
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -17,21 +17,12 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
         <TextView
-                android:id="@+id/deleteNameView"
-                android:layout_weight="1"
+                android:id="@+id/newNetworkView"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="Forget"
+                android:layout_width="fill_parent"
                 android:typeface="sans"
                 android:textSize="18sp"
                 android:textAlignment="center"
                 />
-        <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_menu_delete"
-                android:id="@+id/deleteButton" />
-
-    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

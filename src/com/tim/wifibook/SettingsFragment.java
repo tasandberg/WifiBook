@@ -1,21 +1,21 @@
 package com.tim.wifibook;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,22 +25,33 @@ import java.util.List;
  */
 public class SettingsFragment extends Fragment {
     ArrayList<WifiConfiguration> mNetworks;
+    public static final String MyPREFERENCES = "MyPrefs";
     WifiManager mWifiManager;
-    ArrayList<WifiConfiguration> mScanResults;
-    boolean scanRetrieved = false;
+    SharedPreferences prefs;
+    public static ArrayList<WifiConfiguration> mScanResults;
+    public boolean scanRetrieved = false;
+    public static String SCAN_INTERVAL = "Scan Interval";
     private static final String TAG = "SettingsFragment";
 
+
+    public static  ArrayList<WifiConfiguration> getScanResults() {
+        return mScanResults;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
         mWifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
         mWifiManager.startScan();
+        prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         scanRetrieved = false;
         if (!mWifiManager.isWifiEnabled()) {
             mWifiManager.setWifiEnabled(true);
             mNetworks = (ArrayList) mWifiManager.getConfiguredNetworks();
-            mWifiManager.setWifiEnabled(false);
+            if(!WifiService.isRunning) {
+                mWifiManager.setWifiEnabled(false);
+            }
         } else {
             mNetworks = (ArrayList) mWifiManager.getConfiguredNetworks();
         }
@@ -54,16 +65,16 @@ public class SettingsFragment extends Fragment {
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG, "Scan received");
                 List<ScanResult> scanList = mWifiManager.getScanResults();
-                ArrayList<WifiConfiguration> ssidArray = new ArrayList<WifiConfiguration>();
+                ArrayList<WifiConfiguration> wcArray = new ArrayList<WifiConfiguration>();
                 for(ScanResult r : scanList) {
-                    WifiConfiguration wc = new WifiConfiguration();
+                   WifiConfiguration wc = new WifiConfiguration();
                    wc.SSID = r.SSID;
                    wc.networkId =  -1;
                    wc.BSSID = r.BSSID;
-                   ssidArray.add(wc);
+                   wcArray.add(wc);
                 }
                 scanRetrieved = true;
-                mScanResults = ssidArray;
+                mScanResults = wcArray;
                 getActivity().unregisterReceiver(this);
             }
         };
@@ -71,11 +82,12 @@ public class SettingsFragment extends Fragment {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
             getActivity().getActionBar().setTitle("Settings");
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_settings, container, false);
+        final View v = inflater.inflate(R.layout.fragment_settings, container, false);
         final RadioGroup radioGroup = (RadioGroup) v.findViewById(R.id.wifimode_radios);
         final TextView tv = (TextView) v.findViewById(R.id.mode_blurb);
         int checked_button = radioGroup.getCheckedRadioButtonId();
@@ -115,7 +127,128 @@ public class SettingsFragment extends Fragment {
             }
         });
 
-        //NETWORK MANAGEMENT SECTION
+        /* SEEK BAR SEGMENT */
+        SeekBar seekBar = (SeekBar) v.findViewById(R.id.seekBar);
+        final TextView frequencyTv = (TextView) v.findViewById(R.id.frequency_view);
+        int interval = prefs.getInt(SCAN_INTERVAL, 30000);
+        int progress;
+        switch(interval) {
+            case 10000:
+                progress = 0;
+                break;
+            case 30000:
+                progress = 33;
+                break;
+            case 60000:
+                progress = 66;
+                break;
+            case 300000:
+                progress = 99;
+                break;
+            default:
+                progress = 30000;
+                break;
+        }
+        seekBar.setProgress(progress);
+        switch(progress){
+            case 0:
+                frequencyTv.setText("Every 10s");
+                break;
+            case 33:
+                frequencyTv.setText("Every 30s");
+                break;
+            case 66:
+                frequencyTv.setText("Every 1m");
+                break;
+            case 99:
+                frequencyTv.setText("Every 5m");
+                break;
+            default:
+                break;
+        }
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                seekBar.playSoundEffect(android.view.SoundEffectConstants.CLICK);
+
+                int step = 33;
+                int interval = 1000;
+                progress = (int) (Math.round(progress / step) * step);
+                seekBar.setProgress(progress);
+                switch (progress) {
+                    case 0:
+                        frequencyTv.setText("Every 10s");
+                        interval *= 10;
+                        break;
+                    case 33:
+                        frequencyTv.setText("Every 30s");
+                        interval *= 30;
+                        break;
+                    case 66:
+                        frequencyTv.setText("Every 1m");
+                        interval *= 60;
+                        break;
+                    case 99:
+                        frequencyTv.setText("Every 5m");
+                        interval *= 300;
+                        break;
+                    default:
+                        break;
+                }
+                SharedPreferences.Editor edit = prefs.edit();
+                edit.putInt(SCAN_INTERVAL, interval);
+                edit.commit();
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        Button manageButton = (Button) v.findViewById(R.id.manage_btn);
+        manageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                startActivity(i);
+            }
+        });
+
+
+
+        return v;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+    }
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+        /*
 
         final LinearLayout myNetworksCntr = (LinearLayout) v.findViewById(R.id.mynetworksCntr);
         final LinearLayout localNetworkCntr = (LinearLayout) v.findViewById(R.id.localNetworksCntr);
@@ -128,8 +261,18 @@ public class SettingsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 NetworkOptionsFragment dialog = NetworkOptionsFragment
-                        .newInstance(((WifiConfiguration)parent.getItemAtPosition(position)).SSID);//LOL
+                        .newInstance(((WifiConfiguration)parent.getItemAtPosition(position)).SSID);
                 dialog.show(fm,"NetOptions");
+            }
+        });
+
+        localNetworkListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                NewNetworkFragment dialog =NewNetworkFragment
+                        .newInstance(((WifiConfiguration)parent.getItemAtPosition(position)).SSID);
+                dialog.show(fm,"NEW_NETWORK");
             }
         });
 
@@ -181,6 +324,8 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+
+
         return v;
     }
 
@@ -205,7 +350,7 @@ public class SettingsFragment extends Fragment {
             return convertView;
         }
     }
+*/
 
 
 
-}
