@@ -70,15 +70,21 @@ public class WifiService extends Service {
     private Runnable scanNetworks = new Runnable(){
         @Override
         public void run() {
-            registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-            mWifiManager.setWifiEnabled(true);
-            mWifiManager.startScan();
-            int interval = prefs.getInt(SettingsFragment.SCAN_INTERVAL, 50000);
-            if(interval != CHECK_INTERVAL) {
-                CHECK_INTERVAL = interval;
-                Log.d(TAG,"Interval updated (" + CHECK_INTERVAL + ")");
+            if(!isRunning) {
+                getApplicationContext().stopService(new Intent(getApplicationContext(),WifiService.class));
+                stopForeground(true);
             }
-            handler.postDelayed(this,CHECK_INTERVAL);
+            else {
+                registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+                mWifiManager.setWifiEnabled(true);
+                mWifiManager.startScan();
+                int interval = prefs.getInt(SettingsFragment.SCAN_INTERVAL, 50000);
+                if(interval != CHECK_INTERVAL) {
+                    CHECK_INTERVAL = interval;
+                    Log.d(TAG,"Interval updated (" + CHECK_INTERVAL + ")");
+                }
+                handler.postDelayed(this,CHECK_INTERVAL);
+            }
         }
     };
 
@@ -86,7 +92,7 @@ public class WifiService extends Service {
     public void onDestroy() {
         Log.d(TAG,"Service onDestroy()");
         super.onDestroy();
-        //stopForeground(true);
+        stopForeground(true);
         handler.removeCallbacks(scanNetworks);
         inRange = false;
         isRunning = false;
@@ -202,10 +208,11 @@ public class WifiService extends Service {
         Notification notification = new Notification(R.drawable.icon, "WifiBook is managing your wifi " +
                 "connection",
                 System.currentTimeMillis());
-        Intent notificationIntent = new Intent(this, WifiService.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         notification.setLatestEventInfo(this,"WifiBook",
                 "Managing wifi connections", pendingIntent);
+
         startForeground(notificationID, notification);
 
 

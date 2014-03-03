@@ -22,7 +22,7 @@ import java.util.ArrayList;
  */
 public class SettingsFragment extends Fragment {
     public static final String MyPREFERENCES = "MyPrefs";
-    SharedPreferences prefs;
+    private static SharedPreferences prefs;
     public static ArrayList<WifiConfiguration> mScanResults;
     public boolean scanRetrieved = false;
     boolean wasRunning;
@@ -77,84 +77,42 @@ public class SettingsFragment extends Fragment {
         });
 
         /* SEEK BAR SEGMENT */
-        SeekBar seekBar = (SeekBar) v.findViewById(R.id.seekBar);
+        Spinner freq_spinner = (Spinner) v.findViewById(R.id.scan_spinner);
         final TextView frequencyTv = (TextView) v.findViewById(R.id.frequency_view);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),R.array.frequency_values,
+                android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        freq_spinner.setAdapter(adapter);
         int interval = prefs.getInt(SCAN_INTERVAL, 30000);
-        int progress;
         switch(interval) {
             case 10000:
-                progress = 0;
+                freq_spinner.setSelection(0);
                 break;
             case 30000:
-                progress = 33;
+                freq_spinner.setSelection(1);
                 break;
             case 60000:
-                progress = 66;
+                freq_spinner.setSelection(2);
                 break;
             case 300000:
-                progress = 99;
+                freq_spinner.setSelection(3);
                 break;
             default:
-                progress = 30000;
+                freq_spinner.setSelection(1);
                 break;
         }
-        seekBar.setProgress(progress);
-        switch(progress){
-            case 0:
-                frequencyTv.setText("Every 10s");
-                break;
-            case 33:
-                frequencyTv.setText("Every 30s");
-                break;
-            case 66:
-                frequencyTv.setText("Every 1m");
-                break;
-            case 99:
-                frequencyTv.setText("Every 5m");
-                break;
-            default:
-                break;
-        }
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+        freq_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int step = 33;
-                int interval = 1000;
-                progress = (Math.round(progress / step) * step);
-                seekBar.setProgress(progress);
-                switch (progress) {
-                    case 0:
-                        frequencyTv.setText("Every 10s");
-                        interval *= 10;
-                        break;
-                    case 33:
-                        frequencyTv.setText("Every 30s");
-                        interval *= 30;
-                        break;
-                    case 66:
-                        frequencyTv.setText("Every 1m");
-                        interval *= 60;
-                        break;
-                    case 99:
-                        frequencyTv.setText("Every 5m");
-                        interval *= 300;
-                        break;
-                    default:
-                        break;
-                }
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int[] freqs = new int[]{10000, 30000, 60000, 300000};
                 SharedPreferences.Editor edit = prefs.edit();
-                edit.putInt(SCAN_INTERVAL, interval);
+                edit.putInt(SCAN_INTERVAL, freqs[position]);
                 edit.commit();
-                Log.d(TAG,"Preferences Updated");
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
@@ -165,9 +123,10 @@ public class SettingsFragment extends Fragment {
             public void onClick(View v) {
                 if(WifiService.isRunning) {
                     wasRunning = true;
+                    WifiService.isRunning = false;
                     getActivity().stopService(new Intent(getActivity(), WifiService.class));
+                    makeImageToast(getActivity(), "WifiBook Paused for Network Management",Toast.LENGTH_SHORT).show();
                 }
-                makeImageToast(getActivity(), "WifiBook Paused for Network Management",Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(Settings.ACTION_WIFI_SETTINGS);
                 startActivityForResult(i, 45);
             }
@@ -238,7 +197,7 @@ public class SettingsFragment extends Fragment {
 
 
 
-
+// GRAVEYARD //
 
         /*
 

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -12,10 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.ToggleButton;
+import android.widget.*;
 
 import java.util.List;
 
@@ -78,12 +76,23 @@ public class WelcomeFragment extends Fragment {
             public void run() {
                 current_network = checkConnectionStatus(mPrefNetworks);
                 if(!WifiService.isRunning){
+                    status_view.setText("...");
                     on_off.setChecked(false);
-                } else on_off.setChecked(true);
-                if(!current_network.equals("0x") && !(current_network).equals("<unknown ssid>")) {
-                    status_view.setText("Status: connected to " + current_network);
-                }  else {
-                    status_view.setText("Status: no connection");
+                } else {
+                    on_off.setChecked(true);
+                    try{
+                        if(current_network == null) {
+                            current_network = "Status: Out of range";
+                        }
+                        else {
+                            current_network = "Status: Connected to " + current_network;
+                        }
+
+                    } catch (Exception e) {
+                        Log.d(TAG,"Crashed: " + e);
+                        current_network = "Status: out of range";
+                    }
+                    status_view.setText(current_network);
                 }
                 handler.postDelayed(this,2000);
             }
@@ -100,12 +109,10 @@ public class WelcomeFragment extends Fragment {
                     //STOP SERVICE
                     getActivity().stopService(intent);
                     Log.d(TAG,"Service stopped");
-
                 }
                 else{
                     //START SERVICE
                     getActivity().startService(intent);
-
                     Log.d(TAG,"Service started");
 
                 }
