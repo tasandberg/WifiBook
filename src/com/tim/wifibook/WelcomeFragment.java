@@ -77,19 +77,14 @@ public class WelcomeFragment extends Fragment {
             @Override
             public void run() {
                 current_network = checkConnectionStatus(mPrefNetworks);
-                isRunning = WifiService.isRunning;
-                if(!isRunning){
+                if(!WifiService.isRunning){
                     on_off.setChecked(false);
                 } else on_off.setChecked(true);
                 if(!current_network.equals("0x") && !(current_network).equals("<unknown ssid>")) {
-                    status_view.setText("Status: Connected to " + current_network);
+                    status_view.setText("Status: connected to " + current_network);
                 }  else {
-                    status_view.setText("Status: No connection");
+                    status_view.setText("Status: no connection");
                 }
-                String appender = "\n";
-                if(!isRunning) appender += "Wifi Management OFF";
-                else appender += "Wifi Management ON";
-                status_view.append(appender);
                 handler.postDelayed(this,2000);
             }
         };
@@ -130,7 +125,7 @@ public class WelcomeFragment extends Fragment {
 
     @Override
     public void onResume(){
-        Log.d(TAG, "On resume (" + String.valueOf(isRunning) +")");
+        Log.d(TAG, "On resume()");
         isRunning = WifiService.isRunning;
 
         super.onResume();

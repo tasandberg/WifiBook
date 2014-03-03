@@ -4,13 +4,13 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.*;
+import android.content.res.Configuration;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -28,6 +28,7 @@ import java.util.List;
  */
 
 public class WifiService extends Service {
+
     final static int notificationID = 7278;
     public static boolean isRunning;
     public static boolean inRange;
@@ -39,22 +40,23 @@ public class WifiService extends Service {
     private int count = 1;
     private Handler handler;
     private static int CHECK_INTERVAL;
+
+
     SharedPreferences prefs;
 
     @Override
     public void onCreate(){
+        super.onCreate();
         Log.d(TAG, "onCreate() called in Service");
         prefs = getSharedPreferences(SettingsFragment.MyPREFERENCES, Context.MODE_PRIVATE);
-
         Log.d(TAG,"ScanInterval: " + String.valueOf(CHECK_INTERVAL));
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         mNetworks = mWifiManager.getConfiguredNetworks();
-
-
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent,flags,startId);
         isRunning = true;
         if(inRange) current_network = getCurrentNetworkName();
         startNotification(getApplicationContext());
@@ -63,14 +65,13 @@ public class WifiService extends Service {
         return Service.START_STICKY;
     }
 
+
+
     private Runnable scanNetworks = new Runnable(){
         @Override
         public void run() {
-            if(!mWifiManager.isWifiEnabled()){
-                Log.d(TAG,"Enabling Wifi for scan");
-                mWifiManager.setWifiEnabled(true);
-            }
             registerReceiver(mBroadcastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            mWifiManager.setWifiEnabled(true);
             mWifiManager.startScan();
             int interval = prefs.getInt(SettingsFragment.SCAN_INTERVAL, 50000);
             if(interval != CHECK_INTERVAL) {
@@ -83,8 +84,9 @@ public class WifiService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG,"Service onDestroy()");
         super.onDestroy();
-        stopForeground(true);
+        //stopForeground(true);
         handler.removeCallbacks(scanNetworks);
         inRange = false;
         isRunning = false;
@@ -93,7 +95,6 @@ public class WifiService extends Service {
         } catch (Exception e) {
             Log.d(TAG, "Receiver already unregistered");
         }
-
     }
 
 
@@ -106,16 +107,16 @@ public class WifiService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Received broadcast " + count);
-            mWifiManager.setWifiEnabled(true);
             result_list = mWifiManager.getScanResults();
             count++;
             mNetworks = mWifiManager.getConfiguredNetworks();
-            boolean networksInRange = knownNetworksInRange(result_list, mNetworks);
-            if(networksInRange){
+            inRange = knownNetworksInRange(result_list, mNetworks);
+            if(inRange){
                 return;
-            } else if(!networksInRange) {
+            } else if(!inRange) {
                 mWifiManager.setWifiEnabled(false);
             }
+            unregisterReceiver(this);
 
 
         }
@@ -154,14 +155,21 @@ public class WifiService extends Service {
 
     public boolean knownNetworksInRange(List<ScanResult> results, List<WifiConfiguration> myNetworks){
         boolean preferredNetworkFound = false;
-        Log.d(TAG,"Saved networks:");
-        for (int i = 0; i < myNetworks.size()-1; i++) {
-            Log.d(TAG,myNetworks.get(i).SSID);
+        if(!mWifiManager.isWifiEnabled()){
+            Log.d(TAG,"WEIRD: Wifi disabled for knownNetworks call");
+            mWifiManager.setWifiEnabled(true);
+            return inRange;
         }
+        /*
+        Log.d(TAG,"Saved networks:");
+        for(WifiConfiguration wc : myNetworks) {
+            Log.d(TAG,wc.SSID);
+        }
+        */
 
         for (ScanResult r : results){
             String SSID = r.SSID;
-            Log.d(TAG, "Checking for found network: " + r.SSID);
+            //Log.d(TAG, "Checking for found network: " + r.SSID);
             for (int i = 0; i < myNetworks.size(); i++){
                 if (SSID.equals(myNetworks.get(i).SSID.replace("\"", ""))){
                     String newNetwork = myNetworks.get(i).SSID.replace("\"","");
@@ -178,6 +186,7 @@ public class WifiService extends Service {
                 }
             }
         }
+
         Log.d(TAG,"No preferred networks found, disabling wifi");
         if(inRange) {
             inRange = false;
@@ -190,15 +199,24 @@ public class WifiService extends Service {
 
     // DEFINE AND START NOTIFICATION
     public void startNotification(Context context) {
+        Notification notification = new Notification(R.drawable.icon, "WifiBook is managing your wifi " +
+                "connection",
+                System.currentTimeMillis());
+        Intent notificationIntent = new Intent(this, WifiService.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        notification.setLatestEventInfo(this,"WifiBook",
+                "Managing wifi connections", pendingIntent);
+        startForeground(notificationID, notification);
 
+
+        /*
         PendingIntent pendIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
-
-        String s = "Wifi management on";
-        if(!getCurrentNetworkName().equals("0x")) s += " (" + getCurrentNetworkName().replace("\"","") + ")";
+        String s = "Managing wifi";
         if(inRange) s += " ("+mWifiManager.getConnectionInfo().getSSID() +")";
             Notification notification = new NotificationCompat.Builder(this)
                 .setTicker("WifiBook is managing your wifi connection")
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.drawable.icon))
                 .setSmallIcon(R.drawable.elephi_toast)
                 .setContentTitle("WifiBook")
                 .setContentText(s)
@@ -206,23 +224,8 @@ public class WifiService extends Service {
                 .setAutoCancel(false)
                 .build();
 
-        /*
-        if((Build.VERSION.SDK_INT) >= Build.VERSION_CODES.DONUT) {
-
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-            builder.setTicker("WifiBook").setContentTitle("TITLE").setContentText("CONTENT")
-                    .setWhen(System.currentTimeMillis()).setAutoCancel(false)
-                    .setOngoing(true).setPriority(Notification.PRIORITY_HIGH)
-                    .setContentIntent(pendIntent);
-            notification = builder.build();
-
-        } else {
-            notification = new Notification(R.drawable.elephi_icon, "WifiBook",
-                    System.currentTimeMillis());
-            notification.setLatestEventInfo(context, "Wifibook?!","WifiBook on", pendIntent);
-        }
-        */
         startForeground(notificationID, notification);
+        */
 
     }
 
@@ -266,7 +269,7 @@ public class WifiService extends Service {
 
         // setup image view
         ImageView imageView = new ImageView(context);
-        imageView.setImageResource(R.drawable.elephi_toast);
+        imageView.setImageResource(R.drawable.icon);
         imageView.setLayoutParams(imageParams);
 
         // modify root layout
@@ -277,12 +280,39 @@ public class WifiService extends Service {
     }
 
     public String getCurrentNetworkName(){
-        WifiInfo wInfo = mWifiManager.getConnectionInfo();
-        String s = wInfo.getSSID();
-        return s;
+        if(mWifiManager.isWifiEnabled()) {
+            WifiInfo wInfo = mWifiManager.getConnectionInfo();
+            String s = wInfo.getSSID();
+            return s;
+        }
+        else {
+            return "";
+        }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        Log.d(TAG,"onConfigChanged()");
+        super.onConfigurationChanged(newConfig);
+    }
 
+    @Override
+    public void onLowMemory() {
+        Log.d(TAG,"onLowMemory()");
+        super.onLowMemory();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.d(TAG,"onUnbind()");
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        Log.d(TAG,"onRebind()");
+        super.onRebind(intent);
+    }
 
 }
 
@@ -290,6 +320,23 @@ public class WifiService extends Service {
 
 /*** GRAVEYARD ***/
 
+
+/*
+if((Build.VERSION.SDK_INT) >= Build.VERSION_CODES.DONUT) {
+
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+    builder.setTicker("WifiBook").setContentTitle("TITLE").setContentText("CONTENT")
+            .setWhen(System.currentTimeMillis()).setAutoCancel(false)
+            .setOngoing(true).setPriority(Notification.PRIORITY_HIGH)
+            .setContentIntent(pendIntent);
+    notification = builder.build();
+
+} else {
+    notification = new Notification(R.drawable.elephi_icon, "WifiBook",
+            System.currentTimeMillis());
+    notification.setLatestEventInfo(context, "Wifibook?!","WifiBook on", pendIntent);
+}
+*/
 
 /* REMOVED TO CONVERT FROM ALARMMANAGER TO HANDLER USE
     IN ORDER TO CLEAN UP START/STOP OF SERVICE

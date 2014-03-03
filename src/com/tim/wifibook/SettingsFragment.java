@@ -1,36 +1,34 @@
 package com.tim.wifibook;
 
-import android.content.*;
-import android.net.wifi.ScanResult;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.RadioGroup;
-import android.widget.SeekBar;
-import android.widget.TextView;
+import android.widget.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Tim Sandberg on 2/3/14.
  */
 public class SettingsFragment extends Fragment {
-    ArrayList<WifiConfiguration> mNetworks;
     public static final String MyPREFERENCES = "MyPrefs";
-    WifiManager mWifiManager;
     SharedPreferences prefs;
     public static ArrayList<WifiConfiguration> mScanResults;
     public boolean scanRetrieved = false;
+    boolean wasRunning;
+    boolean launchOnStartup;
     public static String SCAN_INTERVAL = "Scan Interval";
+    public static String LAUNCH_ON_STARTUP = "Startup settings";
     private static final String TAG = "SettingsFragment";
 
 
@@ -42,43 +40,11 @@ public class SettingsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mWifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-        mWifiManager.startScan();
         prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
-        scanRetrieved = false;
-        if (!mWifiManager.isWifiEnabled()) {
-            mWifiManager.setWifiEnabled(true);
-            mNetworks = (ArrayList) mWifiManager.getConfiguredNetworks();
-            if(!WifiService.isRunning) {
-                mWifiManager.setWifiEnabled(false);
-            }
-        } else {
-            mNetworks = (ArrayList) mWifiManager.getConfiguredNetworks();
-        }
+        launchOnStartup = prefs.getBoolean(LAUNCH_ON_STARTUP, false);
+        //Note if service is running (may need to pause for net mgmt)
+        wasRunning = WifiService.isRunning;
 
-        for(int i = 0; i < mNetworks.size(); i++) {
-            Log.d(TAG,"Network: " + mNetworks.get(i).SSID);
-        }
-        BroadcastReceiver receiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "Scan received");
-                List<ScanResult> scanList = mWifiManager.getScanResults();
-                ArrayList<WifiConfiguration> wcArray = new ArrayList<WifiConfiguration>();
-                for(ScanResult r : scanList) {
-                   WifiConfiguration wc = new WifiConfiguration();
-                   wc.SSID = r.SSID;
-                   wc.networkId =  -1;
-                   wc.BSSID = r.BSSID;
-                   wcArray.add(wc);
-                }
-                scanRetrieved = true;
-                mScanResults = wcArray;
-                getActivity().unregisterReceiver(this);
-            }
-        };
-        getActivity().registerReceiver(receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
             getActivity().getActionBar().setTitle("Settings");
         }
@@ -88,42 +54,25 @@ public class SettingsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.fragment_settings, container, false);
-        final RadioGroup radioGroup = (RadioGroup) v.findViewById(R.id.wifimode_radios);
-        final TextView tv = (TextView) v.findViewById(R.id.mode_blurb);
-        int checked_button = radioGroup.getCheckedRadioButtonId();
-        if(WifiService.isRunning) radioGroup.check(R.id.radio_auto);
-        else radioGroup.check(R.id.radio_manual);
-        switch(checked_button){
-            case R.id.radio_auto:
-                tv.setText(R.string.auto_blurb);
-                break;
-            case R.id.radio_manual:
-                tv.setText(R.string.manual_blurb);
-                break;
-            default:
-                break;
-        }
 
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        /* STARTUP SEGMENT */
+        CheckBox cb = (CheckBox) v.findViewById(R.id.startup_cb);
+        cb.setChecked(launchOnStartup);
+        cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                int checked_button = radioGroup.getCheckedRadioButtonId();
-                Intent i = new Intent(getActivity(), WifiService.class);
-                switch(checked_button){
-                    case R.id.radio_auto:
-                        if(!WifiService.isRunning)
-                            getActivity().startService(i);
-                        tv.setText(R.string.auto_blurb);
-                        break;
-                    case R.id.radio_manual:
-                        if(WifiService.isRunning)
-                            getActivity().stopService(i);
-                        Log.d(TAG, "Service stopped");
-                        tv.setText(R.string.manual_blurb);
-                        break;
-                    default:
-                        break;
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor edit = prefs.edit();
+                if(isChecked) {
+                    launchOnStartup = true;
+                    edit.putBoolean(LAUNCH_ON_STARTUP, launchOnStartup);
+                    edit.commit();
+                    Log.d(TAG,"Preferences Updated (startup)");
                 }
+                else
+                    launchOnStartup = false;
+                    edit.putBoolean(LAUNCH_ON_STARTUP, launchOnStartup);
+                    edit.commit();
+                    Log.d(TAG,"Preferences Updated (startup)");
             }
         });
 
@@ -169,11 +118,9 @@ public class SettingsFragment extends Fragment {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                seekBar.playSoundEffect(android.view.SoundEffectConstants.CLICK);
-
                 int step = 33;
                 int interval = 1000;
-                progress = (int) (Math.round(progress / step) * step);
+                progress = (Math.round(progress / step) * step);
                 seekBar.setProgress(progress);
                 switch (progress) {
                     case 0:
@@ -198,7 +145,7 @@ public class SettingsFragment extends Fragment {
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putInt(SCAN_INTERVAL, interval);
                 edit.commit();
-
+                Log.d(TAG,"Preferences Updated");
             }
 
             @Override
@@ -216,31 +163,76 @@ public class SettingsFragment extends Fragment {
         manageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(WifiService.isRunning) {
+                    wasRunning = true;
+                    getActivity().stopService(new Intent(getActivity(), WifiService.class));
+                }
+                makeImageToast(getActivity(), "WifiBook Paused for Network Management",Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(Settings.ACTION_WIFI_SETTINGS);
-                startActivity(i);
+                startActivityForResult(i, 45);
             }
         });
-
-
 
         return v;
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(wasRunning) {
+            getActivity().startService(new Intent(getActivity(), WifiService.class));
+        }
     }
 
+    public static Toast makeImageToast(Context context, CharSequence text, int length) {
+        Toast toast = Toast.makeText(context, text, length);
 
+        View rootView = toast.getView();
+        LinearLayout linearLayout = null;
+        View messageTextView = null;
 
+        // check (expected) toast layout
+        if (rootView instanceof LinearLayout) {
+            linearLayout = (LinearLayout) rootView;
 
+            if (linearLayout.getChildCount() == 1) {
+                View child = linearLayout.getChildAt(0);
 
+                if (child instanceof TextView) {
+                    messageTextView = child;
+                }
+            }
+        }
 
+        // cancel modification because toast layout is not what we expected
+        if (linearLayout == null || messageTextView == null) {
+            return toast;
+        }
 
+        ViewGroup.LayoutParams textParams = messageTextView.getLayoutParams();
+        ((LinearLayout.LayoutParams) textParams).gravity = Gravity.CENTER_VERTICAL;
 
+        // convert dip dimension
+        float density = context.getResources().getDisplayMetrics().density;
+        int imageSize = (int) (density * 25 + 0.5f);
+        int imageMargin = (int) (density * 15 + 0.5f);
 
+        // setup image view layout parameters
+        LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+        imageParams.setMargins(0, 0, imageMargin, 0);
+        imageParams.gravity = Gravity.CENTER_VERTICAL;
 
+        // setup image view
+        ImageView imageView = new ImageView(context);
+        imageView.setImageResource(R.drawable.icon);
+        imageView.setLayoutParams(imageParams);
+
+        // modify root layout
+        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        linearLayout.addView(imageView, 0);
+
+        return toast;
+    }
 }
 
 
@@ -249,6 +241,42 @@ public class SettingsFragment extends Fragment {
 
 
         /*
+
+         if(WifiService.isRunning) radioGroup.check(R.id.radio_auto);
+        else radioGroup.check(R.id.radio_manual);
+        switch(checked_button){
+            case R.id.radio_auto:
+                tv.setText(R.string.auto_blurb);
+                break;
+            case R.id.radio_manual:
+                tv.setText(R.string.manual_blurb);
+                break;
+            default:
+                break;
+        }
+
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                int checked_button = radioGroup.getCheckedRadioButtonId();
+                Intent i = new Intent(getActivity(), WifiService.class);
+                switch(checked_button){
+                    case R.id.radio_auto:
+                        if(!WifiService.isRunning)
+                            getActivity().startService(i);
+                        tv.setText(R.string.auto_blurb);
+                        break;
+                    case R.id.radio_manual:
+                        if(WifiService.isRunning)
+                            getActivity().stopService(i);
+                        Log.d(TAG, "Service stopped");
+                        tv.setText(R.string.manual_blurb);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
 
         final LinearLayout myNetworksCntr = (LinearLayout) v.findViewById(R.id.mynetworksCntr);
         final LinearLayout localNetworkCntr = (LinearLayout) v.findViewById(R.id.localNetworksCntr);

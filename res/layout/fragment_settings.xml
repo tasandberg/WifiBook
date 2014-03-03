@@ -6,9 +6,18 @@
               android:layout_height="match_parent"
               android:padding="10dp">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Wifi Mode: "
-            android:textSize="20dp"/>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+    <TextView android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:paddingTop="5dp"
+              android:text="Startup"
+              android:textSize="20sp"/>
+
     <View android:id="@+id/separator"
           android:background="#33B5E5"
           android:layout_width = "match_parent"
@@ -16,31 +25,28 @@
           android:layout_centerVertical ="true"
           android:layout_alignParentTop="true"/>
 
-    <RadioGroup android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:id="@+id/wifimode_radios">
-        <RadioButton
-            android:id="@+id/radio_auto"
-            android:layout_width="wrap_content"
+    <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Auto">
-            </RadioButton>
-        <RadioButton
-                android:id="@+id/radio_manual"
+            android:orientation="horizontal">
+        <TextView
+                android:layout_weight="1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="false"
-                android:text="Manual">
-        </RadioButton>
-    </RadioGroup>
-    <TextView android:layout_width="match_parent"
-              android:layout_height="75dp"
-              android:id="@+id/mode_blurb"/>
-
-
-
+                android:text="Launch Wifibook on startup"
+                />
+        <CheckBox
+            android:id="@+id/startup_cb"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"/>
+            </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
     <TextView android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:paddingTop="5dp"
@@ -75,19 +81,47 @@
                 android:max="100"
                 android:progress="33"
                 android:id="@+id/seekBar"/>
+    </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
+        <TextView android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="@string/networks_header"
+                  android:textSize="20sp"/>
+        <View android:id="@+id/separator"
+              android:background="#33B5E5"
+              android:layout_width = "match_parent"
+              android:layout_height="1dip"
+              android:layout_centerVertical ="true"
+              android:layout_alignParentTop="true"/>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+            <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:id="@+id/manage_btn"
+                    android:text="Manage Wireless Networks"
+                    android:drawableRight="@drawable/ic_menu_manage"/>
+
+        </LinearLayout>
+    </LinearLayout>
 
     </LinearLayout>
 
-
-
-
-
-
-    <TextView android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="@string/networks_header"
-              android:textSize="20sp"/>
+    <!--
+     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Wifi Mode: "
+            android:textSize="20dp"/>
     <View android:id="@+id/separator"
           android:background="#33B5E5"
           android:layout_width = "match_parent"
@@ -95,24 +129,26 @@
           android:layout_centerVertical ="true"
           android:layout_alignParentTop="true"/>
 
-    <LinearLayout
-            android:layout_width="match_parent"
+    <RadioGroup android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:id="@+id/wifimode_radios">
+        <RadioButton
+            android:id="@+id/radio_auto"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-        <Button
-                android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:id="@+id/manage_btn"
-                android:text="Manage Wireless Networks"
-                android:drawableRight="@drawable/ic_menu_manage"/>
-
-    </LinearLayout>
-
-
-    </LinearLayout>
-
+            android:checked="true"
+            android:text="Auto">
+            </RadioButton>
+        <RadioButton
+                android:id="@+id/radio_manual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Manual">
+        </RadioButton>
+    </RadioGroup>
+    -->
     <!--
     <TextView android:layout_width="match_parent"
               android:layout_height="wrap_content"
