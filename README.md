@@ -1,4 +1,4 @@
-WifiBook
+WifiBook (Android)
 ========
 
 Wifibook intelligently toggles the wifi radio on and off on android devices.
