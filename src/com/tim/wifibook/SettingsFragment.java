@@ -44,10 +44,10 @@ public class SettingsFragment extends Fragment {
         launchOnStartup = prefs.getBoolean(LAUNCH_ON_STARTUP, false);
         //Note if service is running (may need to pause for net mgmt)
         wasRunning = WifiService.isRunning;
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
             getActivity().getActionBar().setTitle("Settings");
         }
+
 
     }
 

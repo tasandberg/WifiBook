@@ -13,8 +13,7 @@
             android:layout_width="wrap_content"
             android:layout_height="39dp"
             android:gravity="center"
-            android:layout_marginRight="8dp"
-            android:src="@drawable/ic_menu_add"/>
+            android:layout_marginRight="8dp"/>
 
     <TextView android:id="@+id/add_name_view"
               android:layout_width="match_parent"

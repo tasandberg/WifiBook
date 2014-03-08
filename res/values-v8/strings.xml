@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">WifiBook</string>
+    <string name="network_select">Network is a switch</string>
+    <string name="manage_networks">Manage Networks</string>
+    <string name="change_interval">Change Scan Frequency</string>
+    <string name="auto_blurb">
+        Auto:  Wifi will automatically turn on when familiar networks are in range.
+    </string>
+
+    <string name="manual_blurb">
+        Manual: It is up to the user to turn wifi on or off.  Can result in unnecessary mobile data usage,
+        decreased battery life, and less reliable data connectivity.
+    </string>
+    <string name="networks_header">Networks</string>
+    <string name="notifications_header">Notifications</string>
+    <string name="add_btn">New</string>
+    <string name="manage_btn">Manage</string>
+    <string name="NetworkOptionsTitle">Forget Network?</string>
+    <string-array name="frequency_values">
+        <item>10 seconds</item>
+        <item>30 seconds</item>
+        <item>1 minute</item>
+        <item>5 minutes</item>
+    </string-array>
+</resources>

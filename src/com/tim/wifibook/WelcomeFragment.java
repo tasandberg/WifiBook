@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -50,11 +49,11 @@ public class WelcomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.fragment_welcome,container, false);
-        final LinearLayout ll = (LinearLayout) v.findViewById(R.id.welcome_view);
+        final RelativeLayout rl= (RelativeLayout) v.findViewById(R.id.welcome_view);
         Log.d(TAG, "onCreate() WelcomeFragment");
 
         //***  Status TextView  and Updater ********//
-        final TextView status_view = (TextView)ll.findViewById(R.id.status_textView);
+        final TextView status_view = (TextView)rl.findViewById(R.id.status_textView);
         ImageView settings_button = (ImageView)v.findViewById(R.id.settingsButton);
         settings_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,7 +80,7 @@ public class WelcomeFragment extends Fragment {
                 } else {
                     on_off.setChecked(true);
                     try{
-                        if(current_network == null) {
+                        if(current_network == null || current_network.equalsIgnoreCase("<unknown SSID>") || current_network.equalsIgnoreCase("0x")) {
                             current_network = "Status: Out of range";
                         }
                         else {
