@@ -3,6 +3,7 @@ package com.tim.wifibook;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.os.Build;
 import android.os.Bundle;
@@ -129,6 +130,36 @@ public class SettingsFragment extends Fragment {
                 }
                 Intent i = new Intent(Settings.ACTION_WIFI_SETTINGS);
                 startActivityForResult(i, 45);
+            }
+        });
+
+        Button contactBtn = (Button) v.findViewById(R.id.contact_btn);
+        contactBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    Intent i = new Intent(Intent.ACTION_SEND);
+
+                    i.setData(Uri.parse("mailto:"));
+                    i.setType("text/plain");
+                    i.putExtra(Intent.EXTRA_EMAIL, new String[] {"tasandberg@gmail.com"});
+                    i.putExtra(Intent.EXTRA_SUBJECT, "WifiBook Feedback");
+                    try {
+                        startActivity(Intent.createChooser(i, "Send feedback..."));
+                        getActivity().finish();
+                    } catch (android.content.ActivityNotFoundException ex) {
+                        Toast.makeText(getActivity(), "No suitable email client found.  Please email developer at tasandberg@gmail.com", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG,"No email client found");
+                    }
+
+            }
+        });
+        Button ratetBtn = (Button) v.findViewById(R.id.rate_btn);
+        ratetBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("market://details?id=com.tim.wifibook"));
+                startActivity(intent);
             }
         });
 

@@ -106,12 +106,59 @@
 
             <Button
                     android:layout_width="match_parent"
-                    android:layout_height="45dp"
+                    android:layout_height="wrap_content"
                     android:id="@+id/manage_btn"
                     android:text="Manage Wireless Networks"
                     android:drawableRight="@drawable/ic_menu_manage"/>
 
         </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="20sp"
+                android:text="Bugs?  Comments?  Questions?"/>
+
+
+        <View android:id="@+id/separator"
+              android:background="#dd543d"
+              android:layout_width = "match_parent"
+              android:layout_height="1dip"
+              android:layout_centerVertical ="true"
+              android:layout_alignParentTop="true"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="10dp">
+            <Button
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/contact_btn"
+                    android:drawableLeft="@drawable/ic_dialog_email"
+                    android:padding="10dp"
+                    android:text="  Contact Me"/>
+
+            <Button
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:id="@+id/rate_btn"
+                    android:drawableLeft="@drawable/rate_star_med_on_holo_light"
+                    android:text="Rate WifiBook!"/>
+        </LinearLayout>
+
     </LinearLayout>
 
     </LinearLayout>
