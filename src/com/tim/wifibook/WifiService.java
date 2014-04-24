@@ -143,14 +143,6 @@ public class WifiService extends Service {
         TextView tv = new TextView(this);
         tv.setText(message);
         tv.setCompoundDrawablesWithIntrinsicBounds(R.drawable.elephi_toast, 0, 0, 0);
-        /*
-        Drawable bg = getResources().getDrawable(R.drawable.toast_light_bg);
-        if(Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            tv.setBackgroundDrawable(bg);
-        } else {
-            tv.setBackground(bg);
-        }
-        */
         Toast toast = new Toast(getApplicationContext());
         DisplayMetrics dm = getResources().getDisplayMetrics();
         toast.setGravity(Gravity.CENTER_VERTICAL, 0, (int) (dm.heightPixels * .75) );
@@ -166,16 +158,9 @@ public class WifiService extends Service {
             mWifiManager.setWifiEnabled(true);
             return inRange;
         }
-        /*
-        Log.d(TAG,"Saved networks:");
-        for(WifiConfiguration wc : myNetworks) {
-            Log.d(TAG,wc.SSID);
-        }
-        */
 
         for (ScanResult r : results){
             String SSID = r.SSID;
-            //Log.d(TAG, "Checking for found network: " + r.SSID);
             for (int i = 0; i < myNetworks.size(); i++){
                 if (SSID.equals(myNetworks.get(i).SSID.replace("\"", ""))){
                     String newNetwork = myNetworks.get(i).SSID.replace("\"","");
@@ -214,25 +199,6 @@ public class WifiService extends Service {
                 "Managing wifi connections", pendingIntent);
 
         startForeground(notificationID, notification);
-
-
-        /*
-        PendingIntent pendIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), 0);
-        String s = "Managing wifi";
-        if(inRange) s += " ("+mWifiManager.getConnectionInfo().getSSID() +")";
-            Notification notification = new NotificationCompat.Builder(this)
-                .setTicker("WifiBook is managing your wifi connection")
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.drawable.icon))
-                .setSmallIcon(R.drawable.elephi_toast)
-                .setContentTitle("WifiBook")
-                .setContentText(s)
-                .setContentIntent(pendIntent)
-                .setAutoCancel(false)
-                .build();
-
-        startForeground(notificationID, notification);
-        */
 
     }
 
